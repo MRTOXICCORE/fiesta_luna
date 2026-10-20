@@ -357,43 +357,233 @@ th {
 
     <!-- PANEL DE ORGANIZACIÓN -->
 
-    <section class="seccion admin">
-      <h2>🔐 Panel de organización</h2>
+   
+<section class="seccion admin">
+  <h2>🔐 Panel de organización</h2>
 
-      <label for="clave">Clave de organizadora</label>
-      <input type="password" id="clave" placeholder="Introduce la clave">
+  <form id="loginForm">
+    <label for="adminEmail">Correo del administrador</label>
+    <input type="email" id="adminEmail" required
+           placeholder="Tu correo de administrador">
 
-      <button type="button" class="morado" onclick="verRegistros()">
-        Ver registros
-      </button>
+    <label for="adminPassword">Contraseña</label>
+    <input type="password" id="adminPassword" required
+           placeholder="Tu contraseña de Supabase">
 
-      <button type="button" onclick="descargarExcel()">
-        Descargar Excel 📊
-      </button>
+    <button type="submit" class="morado">
+      Iniciar sesión
+    </button>
+  </form>
 
-      <div id="lista"></div>
-    </section>
+  <p id="adminStatus" aria-live="polite"></p>
 
-  </section>
-</main>
+  <div id="adminTools" hidden>
+    <button type="button" id="refreshGuests" class="morado">
+      Ver registros
+    </button>
+
+    <button type="button" id="downloadExcel">
+      Descargar Excel 📊
+    </button>
+
+    <button type="button" id="logoutAdmin" class="morado">
+      Cerrar sesión
+    </button>
+
+    <div id="guestList"></div>
+  </div>
+</section>
+
 
 <!-- Librería para generar archivos Excel -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <script>
-const CLAVE = "luna2025";
-const ALMACEN = "invitadosLunaElizabeth";
+const SUPABASE_URL = "https://krfyfygcyrekbybvphnz.supabase.co/rest/v1/";
+const SUPABASE_KEY = "sb_publishable_hIt-HYQW94zzJdseuyltOA_K08ksVIf";
+
+const db = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 
 const formulario = document.getElementById("formulario");
 const estado = document.getElementById("estado");
+const adminStatus = document.getElementById("adminStatus");
+const adminTools = document.getElementById("adminTools");
+const guestList = document.getElementById("guestList");
 
-function obtenerRegistros() {
-  try {
-    return JSON.parse(localStorage.getItem(ALMACEN) || "[]");
-  } catch (error) {
-    return [];
+let invitados = [];
+
+// Registrar invitados en la base de datos
+formulario.addEventListener("submit", async function(evento) {
+  evento.preventDefault();
+
+  const nombre = document.getElementById("nombre").value.trim();
+  const asistencia = document.getElementById("asistencia").value;
+  const acompanantes = Number(
+    document.getElementById("acompanantes").value
+  );
+
+  if (!nombre) {
+    estado.textContent = "Escribe tu nombre.";
+    return;
   }
+
+  estado.textContent = "Guardando registro...";
+
+  const { error } = await db
+    .from("invitados")
+    .insert([{
+      nombre,
+      asistencia,
+      acompanantes
+    }]);
+
+  if (error) {
+    console.error(error);
+    estado.textContent =
+      "No se pudo guardar. Comprueba la conexión y los permisos.";
+    return;
+  }
+
+  formulario.reset();
+  estado.textContent = "¡Tu asistencia se registró correctamente! 💗";
+});
+
+// Iniciar sesión del administrador
+document.getElementById("loginForm").addEventListener(
+  "submit", async function(evento) {
+    evento.preventDefault();
+
+    adminStatus.textContent = "Verificando acceso...";
+
+    const email = document.getElementById("adminEmail").value.trim();
+    const password = document.getElementById("adminPassword").value;
+
+    const { error } = await db.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      console.error(error);
+      adminStatus.textContent =
+        "No se pudo iniciar sesión. Comprueba tus datos.";
+      return;
+    }
+
+    adminStatus.textContent = "Sesión iniciada.";
+    adminTools.hidden = false;
+    await cargarInvitados();
+  }
+);
+
+// Consultar todos los registros
+async function cargarInvitados() {
+  const { data, error } = await db
+    .from("invitados")
+    .select("id,nombre,asistencia,acompanantes,fecha_registro")
+    .order("id", { ascending: true });
+
+  if (error) {
+    console.error(error);
+    adminStatus.textContent =
+      "No se pudieron consultar los registros. Revisa las políticas RLS.";
+    return;
+  }
+
+  invitados = data || [];
+  guestList.replaceChildren();
+
+  if (invitados.length === 0) {
+    guestList.textContent = "Todavía no hay invitados registrados.";
+    return;
+  }
+
+  const tabla = document.createElement("table");
+  const encabezado = document.createElement("tr");
+
+  ["Nombre", "Asistencia", "Acompañantes"].forEach(texto => {
+    const th = document.createElement("th");
+    th.textContent = texto;
+    encabezado.appendChild(th);
+  });
+
+  tabla.appendChild(encabezado);
+
+  invitados.forEach(invitado => {
+    const fila = document.createElement("tr");
+
+    [
+      invitado.nombre,
+      invitado.asistencia,
+      invitado.acompanantes
+    ].forEach(valor => {
+      const td = document.createElement("td");
+      td.textContent = valor ?? "";
+      fila.appendChild(td);
+    });
+
+    tabla.appendChild(fila);
+  });
+
+  guestList.appendChild(tabla);
+
+  const total = document.createElement("p");
+  total.textContent = "Total de registros: " + invitados.length;
+  guestList.appendChild(total);
 }
+
+document.getElementById("refreshGuests").addEventListener(
+  "click", cargarInvitados
+);
+
+// Descargar Excel actualizado desde Supabase
+document.getElementById("downloadExcel").addEventListener(
+  "click", async function() {
+    await cargarInvitados();
+
+    if (invitados.length === 0) {
+      alert("No hay invitados para descargar.");
+      return;
+    }
+
+    if (typeof XLSX === "undefined") {
+      alert("No se pudo cargar la biblioteca de Excel.");
+      return;
+    }
+
+    const datos = invitados.map((invitado, indice) => ({
+      "N.º": indice + 1,
+      "Nombre completo": invitado.nombre,
+      "Asistencia": invitado.asistencia,
+      "Acompañantes": invitado.acompanantes,
+      "Fecha de registro": invitado.fecha_registro
+    }));
+
+    const hoja = XLSX.utils.json_to_sheet(datos);
+    const libro = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(libro, hoja, "Invitados");
+    XLSX.writeFile(libro, "invitados_luna_elizabeth.xlsx");
+  }
+);
+
+// Cerrar sesión
+document.getElementById("logoutAdmin").addEventListener(
+  "click", async function() {
+    await db.auth.signOut();
+    invitados = [];
+    adminTools.hidden = true;
+    guestList.replaceChildren();
+    adminStatus.textContent = "Sesión cerrada.";
+  }
+);
+</script>
+
 
 // Guardar registro
 formulario.addEventListener("submit", function(evento) {
