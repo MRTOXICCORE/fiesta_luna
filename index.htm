@@ -1,0 +1,519 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiesta de Luna Elizabeth</title>
+
+<style>
+:root {
+  --rosa: #ed3d91;
+  --morado: #a879e8;
+  --amarillo: #ffd94d;
+  --papel: #fff6e9;
+  --texto: #44251c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Trebuchet MS", sans-serif;
+  color: var(--texto);
+  background: linear-gradient(#31b8f1 0 55%, #77d65c 55%);
+  overflow-x: hidden;
+}
+
+/* Sol y nubes */
+
+.sol {
+  position: fixed;
+  top: -65px;
+  left: -55px;
+  width: 210px;
+  height: 210px;
+  border-radius: 50%;
+  background: #ffe334;
+  z-index: -1;
+}
+
+.nube {
+  position: fixed;
+  top: 8%;
+  left: 60%;
+  font-size: 75px;
+  animation: moverNube 7s ease-in-out infinite alternate;
+}
+
+@keyframes moverNube {
+  from { transform: translateX(-15px); }
+  to { transform: translateX(25px); }
+}
+
+/* Invitación */
+
+.contenedor {
+  width: min(900px, 94%);
+  margin: 35px auto;
+}
+
+.madera {
+  background: linear-gradient(175deg, #98613c, #6d3f2b);
+  color: white;
+  text-align: center;
+  padding: 28px 15px;
+  border: 5px solid #76442e;
+  border-radius: 12px;
+  position: relative;
+  box-shadow: 0 8px #54301f;
+}
+
+.madera small {
+  font-size: 2rem;
+}
+
+h1 {
+  color: #ff6eae;
+  font-size: clamp(2.2rem, 7vw, 4.8rem);
+  margin: 8px 0;
+  text-shadow: 2px 4px #9e3567;
+}
+
+.flor {
+  position: absolute;
+  font-size: 48px;
+  animation: balancear 2.5s ease-in-out infinite;
+}
+
+.flor1 { top: -25px; left: 3%; }
+.flor2 { top: -25px; right: 3%; animation-delay: -.8s; }
+.flor3 { bottom: -25px; left: 2%; animation-delay: -1s; }
+.flor4 { bottom: -25px; right: 2%; animation-delay: -.5s; }
+
+@keyframes balancear {
+  0%, 100% { transform: rotate(-10deg) translateY(0); }
+  50% { transform: rotate(10deg) translateY(-8px); }
+}
+
+.tarjeta {
+  background: var(--papel);
+  padding: 35px clamp(18px, 5vw, 55px);
+  border-radius: 40px;
+  margin-top: 5px;
+  box-shadow: 0 10px #b1e36b;
+}
+
+.intro, .mensaje {
+  text-align: center;
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  line-height: 1.5;
+}
+
+.detalles {
+  max-width: 600px;
+  margin: auto;
+}
+
+.detalle {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: 22px 0;
+}
+
+.icono {
+  font-size: 2.5rem;
+}
+
+.etiqueta {
+  display: inline-block;
+  padding: 5px 17px;
+  border-radius: 25px;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.fecha { background: #ffb6d9; }
+.hora { background: #d8b8ff; }
+.lugar { background: #ffe16a; }
+
+.detalle p {
+  font-size: 1.25rem;
+  margin: 7px 0;
+}
+
+.cinta {
+  background: var(--rosa);
+  color: white;
+  text-align: center;
+  padding: 15px;
+  max-width: 450px;
+  margin: 30px auto;
+  font-size: 1.7rem;
+  font-weight: bold;
+  border-radius: 10px;
+}
+
+/* Formulario */
+
+.seccion {
+  background: #fffdf8;
+  border: 2px dashed #f5a4cb;
+  border-radius: 20px;
+  padding: 22px;
+  margin-top: 25px;
+}
+
+.seccion h2 {
+  color: #d72d7f;
+}
+
+form {
+  display: grid;
+  gap: 14px;
+}
+
+label {
+  font-weight: bold;
+}
+
+input, select {
+  width: 100%;
+  padding: 12px;
+  margin-top: 6px;
+  border: 2px solid #f3b0d1;
+  border-radius: 10px;
+  font-size: 1rem;
+}
+
+button {
+  padding: 13px;
+  border: none;
+  border-radius: 10px;
+  background: var(--rosa);
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+button:hover {
+  filter: brightness(.92);
+}
+
+.morado {
+  background: var(--morado);
+}
+
+#estado {
+  color: #287d3d;
+  font-weight: bold;
+}
+
+.admin {
+  background: #fff0b2;
+}
+
+#lista {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+th, td {
+  text-align: left;
+  padding: 9px;
+  border-bottom: 1px solid #edd5e0;
+}
+
+th {
+  background: #ffe0ee;
+}
+
+@media (max-width: 500px) {
+  .madera small { font-size: 1.5rem; }
+  .flor { font-size: 35px; }
+  .tarjeta { padding: 25px 16px; }
+  .icono { font-size: 2rem; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="sol"></div>
+<div class="nube">☁️</div>
+
+<main class="contenedor">
+
+  <header class="madera">
+    <span class="flor flor1">🌸</span>
+    <span class="flor flor2">🌼</span>
+
+    <small>Fiesta de</small>
+    <h1>Luna Elizabeth</h1>
+  </header>
+
+  <section class="tarjeta">
+
+    <p class="intro">
+      💗 ¡Estás invitado/a a celebrar<br>
+      mi cumpleaños! 💗
+    </p>
+
+    <div class="detalles">
+
+      <div class="detalle">
+        <span class="icono">🗓️</span>
+        <div>
+          <span class="etiqueta fecha">Fecha:</span>
+          <p>Domingo, 26 de octubre de 2025</p>
+        </div>
+      </div>
+
+      <div class="detalle">
+        <span class="icono">🕓</span>
+        <div>
+          <span class="etiqueta hora">Hora:</span>
+          <p>4:00 p. m.</p>
+        </div>
+      </div>
+
+      <div class="detalle">
+        <span class="icono">📍</span>
+        <div>
+          <span class="etiqueta lugar">Lugar:</span>
+          <p>En mi casa</p>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="mensaje">
+      ¡Será un día muy especial<br>
+      y me encantaría que<br>
+      me acompañaras!
+    </p>
+
+    <div class="cinta">Luna Elizabeth ♥</div>
+
+    <span class="flor flor3">🌺</span>
+    <span class="flor flor4">🌻</span>
+
+    <!-- REGISTRO DE INVITADOS -->
+
+    <section class="seccion">
+      <h2>🌷 Confirma tu asistencia</h2>
+
+      <p>Regístrate para acompañar a Luna.</p>
+
+      <form id="formulario">
+
+        <div>
+          <label for="nombre">Nombre completo</label>
+          <input
+            type="text"
+            id="nombre"
+            maxlength="100"
+            required
+            placeholder="Escribe tu nombre">
+        </div>
+
+        <div>
+          <label for="asistencia">¿Vas a asistir?</label>
+          <select id="asistencia">
+            <option value="Sí">Sí, allí estaré</option>
+            <option value="No">No podré asistir</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="acompanantes">Número de acompañantes</label>
+          <select id="acompanantes">
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </div>
+
+        <button type="submit">
+          Confirmar registro 💖
+        </button>
+
+        <p id="estado" aria-live="polite"></p>
+
+      </form>
+    </section>
+
+    <!-- PANEL DE ORGANIZACIÓN -->
+
+    <section class="seccion admin">
+      <h2>🔐 Panel de organización</h2>
+
+      <label for="clave">Clave de organizadora</label>
+      <input type="password" id="clave" placeholder="Introduce la clave">
+
+      <button type="button" class="morado" onclick="verRegistros()">
+        Ver registros
+      </button>
+
+      <button type="button" onclick="descargarExcel()">
+        Descargar Excel 📊
+      </button>
+
+      <div id="lista"></div>
+    </section>
+
+  </section>
+</main>
+
+<!-- Librería para generar archivos Excel -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<script>
+const CLAVE = "luna2025";
+const ALMACEN = "invitadosLunaElizabeth";
+
+const formulario = document.getElementById("formulario");
+const estado = document.getElementById("estado");
+
+function obtenerRegistros() {
+  try {
+    return JSON.parse(localStorage.getItem(ALMACEN) || "[]");
+  } catch (error) {
+    return [];
+  }
+}
+
+// Guardar registro
+formulario.addEventListener("submit", function(evento) {
+  evento.preventDefault();
+
+  const nombre = document.getElementById("nombre").value.trim();
+
+  if (!nombre) {
+    estado.textContent = "Escribe tu nombre.";
+    return;
+  }
+
+  const invitado = {
+    nombre: nombre,
+    asistencia: document.getElementById("asistencia").value,
+    acompanantes: Number(
+      document.getElementById("acompanantes").value
+    ),
+    fechaRegistro: new Date().toLocaleString("es-PA")
+  };
+
+  const registros = obtenerRegistros();
+  registros.push(invitado);
+
+  localStorage.setItem(ALMACEN, JSON.stringify(registros));
+
+  formulario.reset();
+  estado.textContent = "¡Registro guardado correctamente! 💗";
+});
+
+// Comprobar clave
+function verificarClave() {
+  if (document.getElementById("clave").value !== CLAVE) {
+    alert("Clave incorrecta.");
+    return false;
+  }
+
+  return true;
+}
+
+// Mostrar nombres
+function verRegistros() {
+  if (!verificarClave()) return;
+
+  const registros = obtenerRegistros();
+  const lista = document.getElementById("lista");
+
+  if (registros.length === 0) {
+    lista.textContent = "Todavía no hay invitados registrados.";
+    return;
+  }
+
+  const tabla = document.createElement("table");
+  const encabezado = document.createElement("tr");
+
+  ["Nombre", "Asistencia", "Acompañantes"].forEach(function(texto) {
+    const th = document.createElement("th");
+    th.textContent = texto;
+    encabezado.appendChild(th);
+  });
+
+  tabla.appendChild(encabezado);
+
+  registros.forEach(function(invitado) {
+    const fila = document.createElement("tr");
+
+    [
+      invitado.nombre,
+      invitado.asistencia,
+      invitado.acompanantes
+    ].forEach(function(valor) {
+      const celda = document.createElement("td");
+      celda.textContent = valor;
+      fila.appendChild(celda);
+    });
+
+    tabla.appendChild(fila);
+  });
+
+  lista.replaceChildren(tabla);
+
+  const total = document.createElement("p");
+  total.textContent = "Total de registros: " + registros.length;
+  lista.appendChild(total);
+}
+
+// Exportar a Excel
+function descargarExcel() {
+  if (!verificarClave()) return;
+
+  const registros = obtenerRegistros();
+
+  if (registros.length === 0) {
+    alert("No hay registros para descargar.");
+    return;
+  }
+
+  if (typeof XLSX === "undefined") {
+    alert("No se pudo cargar Excel. Comprueba tu conexión.");
+    return;
+  }
+
+  const datos = registros.map(function(invitado, indice) {
+    return {
+      "N.º": indice + 1,
+      "Nombre completo": invitado.nombre,
+      "Asistencia": invitado.asistencia,
+      "Acompañantes": invitado.acompanantes,
+      "Fecha de registro": invitado.fechaRegistro
+    };
+  });
+
+  const hoja = XLSX.utils.json_to_sheet(datos);
+  const libro = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(libro, hoja, "Invitados");
+
+  XLSX.writeFile(libro, "invitados_luna_elizabeth.xlsx");
+}
+</script>
+
+</body>
+</html>
