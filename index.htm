@@ -584,56 +584,98 @@ document.getElementById("logoutAdmin").addEventListener(
 );
 </script>
 
+<script>
+/* REGISTRO DE INVITADOS CON SUPABASE */
 
-// Guardar registro
-formulario.addEventListener("submit", function(evento) {
+const formulario = document.getElementById("formulario");
+const estado = document.getElementById("estado");
+const adminStatus = document.getElementById("adminStatus");
+const adminTools = document.getElementById("adminTools");
+const guestList = document.getElementById("guestList");
+
+let invitados = [];
+
+// Guardar registro en Supabase
+formulario.addEventListener("submit", async function(evento) {
   evento.preventDefault();
 
   const nombre = document.getElementById("nombre").value.trim();
+  const asistencia = document.getElementById("asistencia").value;
+  const acompanantes = Number(
+    document.getElementById("acompanantes").value
+  );
 
   if (!nombre) {
     estado.textContent = "Escribe tu nombre.";
     return;
   }
 
-  const invitado = {
-    nombre: nombre,
-    asistencia: document.getElementById("asistencia").value,
-    acompanantes: Number(
-      document.getElementById("acompanantes").value
-    ),
-    fechaRegistro: new Date().toLocaleString("es-PA")
-  };
+  estado.textContent = "Guardando registro...";
 
-  const registros = obtenerRegistros();
-  registros.push(invitado);
+  const { error } = await db
+    .from("invitados")
+    .insert([{ nombre, asistencia, acompanantes }]);
 
-  localStorage.setItem(ALMACEN, JSON.stringify(registros));
+  if (error) {
+    console.error("Error de Supabase:", error);
+    estado.textContent =
+      "No se pudo guardar. Revisa la conexión y los permisos.";
+    return;
+  }
 
   formulario.reset();
   estado.textContent = "¡Registro guardado correctamente! 💗";
 });
 
-// Comprobar clave
-function verificarClave() {
-  if (document.getElementById("clave").value !== CLAVE) {
-    alert("Clave incorrecta.");
+// Iniciar sesión del administrador
+document.getElementById("loginForm").addEventListener(
+  "submit",
+  async function(evento) {
+    evento.preventDefault();
+
+    adminStatus.textContent = "Verificando acceso...";
+
+    const email = document.getElementById("adminEmail").value.trim();
+    const password = document.getElementById("adminPassword").value;
+
+    const { error } = await db.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      console.error("Error de inicio de sesión:", error);
+      adminStatus.textContent =
+        "No se pudo iniciar sesión. Comprueba tus datos.";
+      return;
+    }
+
+    adminStatus.textContent = "Sesión iniciada.";
+    adminTools.hidden = false;
+    await cargarInvitados();
+  }
+);
+
+// Consultar invitados
+async function cargarInvitados() {
+  const { data, error } = await db
+    .from("invitados")
+    .select("id,nombre,asistencia,acompanantes,fecha_registro")
+    .order("id", { ascending: true });
+
+  if (error) {
+    console.error("Error al consultar invitados:", error);
+    adminStatus.textContent =
+      "No se pudieron consultar los registros. Revisa las políticas RLS.";
     return false;
   }
 
-  return true;
-}
+  invitados = data || [];
+  guestList.replaceChildren();
 
-// Mostrar nombres
-function verRegistros() {
-  if (!verificarClave()) return;
-
-  const registros = obtenerRegistros();
-  const lista = document.getElementById("lista");
-
-  if (registros.length === 0) {
-    lista.textContent = "Todavía no hay invitados registrados.";
-    return;
+  if (invitados.length === 0) {
+    guestList.textContent = "Todavía no hay invitados registrados.";
+    return true;
   }
 
   const tabla = document.createElement("table");
@@ -647,7 +689,7 @@ function verRegistros() {
 
   tabla.appendChild(encabezado);
 
-  registros.forEach(function(invitado) {
+  invitados.forEach(function(invitado) {
     const fila = document.createElement("tr");
 
     [
@@ -655,54 +697,81 @@ function verRegistros() {
       invitado.asistencia,
       invitado.acompanantes
     ].forEach(function(valor) {
-      const celda = document.createElement("td");
-      celda.textContent = valor;
-      fila.appendChild(celda);
+      const td = document.createElement("td");
+      td.textContent = valor ?? "";
+      fila.appendChild(td);
     });
 
     tabla.appendChild(fila);
   });
 
-  lista.replaceChildren(tabla);
+  guestList.appendChild(tabla);
 
   const total = document.createElement("p");
-  total.textContent = "Total de registros: " + registros.length;
-  lista.appendChild(total);
+  total.textContent = "Total de registros: " + invitados.length;
+  guestList.appendChild(total);
+
+  return true;
 }
 
-// Exportar a Excel
-function descargarExcel() {
-  if (!verificarClave()) return;
+// Botón para actualizar registros
+document.getElementById("refreshGuests").addEventListener(
+  "click",
+  cargarInvitados
+);
 
-  const registros = obtenerRegistros();
+// Exportar invitados a Excel
+document.getElementById("downloadExcel").addEventListener(
+  "click",
+  async function() {
+    const correcto = await cargarInvitados();
 
-  if (registros.length === 0) {
-    alert("No hay registros para descargar.");
-    return;
+    if (!correcto || invitados.length === 0) {
+      alert("No hay registros disponibles para descargar.");
+      return;
+    }
+
+    if (typeof XLSX === "undefined") {
+      alert("No se pudo cargar la biblioteca de Excel.");
+      return;
+    }
+
+    const datos = invitados.map(function(invitado, indice) {
+      return {
+        "N.º": indice + 1,
+        "Nombre completo": invitado.nombre,
+        "Asistencia": invitado.asistencia,
+        "Acompañantes": invitado.acompanantes,
+        "Fecha de registro": invitado.fecha_registro
+      };
+    });
+
+    const hoja = XLSX.utils.json_to_sheet(datos);
+    const libro = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(libro, hoja, "Invitados");
+
+    XLSX.writeFile(libro, "invitados_luna_elizabeth.xlsx");
   }
+);
 
-  if (typeof XLSX === "undefined") {
-    alert("No se pudo cargar Excel. Comprueba tu conexión.");
-    return;
+// Cerrar sesión
+document.getElementById("logoutAdmin").addEventListener(
+  "click",
+  async function() {
+    await db.auth.signOut();
+
+    invitados = [];
+    adminTools.hidden = true;
+    guestList.replaceChildren();
+    adminStatus.textContent = "Sesión cerrada.";
   }
+);
+</script>
 
-  const datos = registros.map(function(invitado, indice) {
-    return {
-      "N.º": indice + 1,
-      "Nombre completo": invitado.nombre,
-      "Asistencia": invitado.asistencia,
-      "Acompañantes": invitado.acompanantes,
-      "Fecha de registro": invitado.fechaRegistro
-    };
-  });
 
-  const hoja = XLSX.utils.json_to_sheet(datos);
-  const libro = XLSX.utils.book_new();
 
-  XLSX.utils.book_append_sheet(libro, hoja, "Invitados");
 
-  XLSX.writeFile(libro, "invitados_luna_elizabeth.xlsx");
-}
 </script>
 
 </body>
